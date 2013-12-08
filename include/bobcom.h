@@ -57,11 +57,7 @@
 #define T_SUPER         295
 #define T_NEW           296
 #define T_DOTDOT        297
-#define T_TRY           298
-#define T_CATCH         299
-#define T_FINALLY       300
-#define T_THROW         301
-#define _TMAX           301
+#define _TMAX           297
 
 /* argument structure */
 typedef struct argument ARGUMENT;
@@ -104,15 +100,6 @@ struct swentry {
     SWENTRY *next;
 };
 
-/* try/catch/finally entry structure */
-typedef struct TCENTRY TCENTRY;
-struct TCENTRY {
-    int handler;
-    int start;
-    int end;
-    TCENTRY *next;
-};
-
 /* limits */
 #define TKNSIZE         255     /* maximum BobToken size */
 #define LSIZE           255     /* maximum line size */
@@ -139,7 +126,6 @@ struct BobCompiler {
     BobStream *input;                   /* compiler - input stream */
     int blockLevel;                     /* compiler - nesting level */
     ATABLE *arguments;                  /* compiler - argument frames */
-    TCENTRY *exceptions;                /* compiler - exceptions */
     SENTRY *bsp;                        /* compiler - break stack */
     SENTRY *csp;                        /* compiler - continue stack */
     SWENTRY *ssp;                       /* compiler - switch stack */

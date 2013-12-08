@@ -50,8 +50,6 @@ static void do_default(BobCompiler *c);
 static void UnwindStack(BobCompiler *c,int levels);
 static void do_block(BobCompiler *c);
 static void do_return(BobCompiler *c);
-static void do_try(BobCompiler *c);
-static void do_throw(BobCompiler *c);
 static void do_test(BobCompiler *c);
 static void do_expr(BobCompiler *c);
 static void do_init_expr(BobCompiler *c);
@@ -251,8 +249,6 @@ static void do_statement(BobCompiler *c)
     case T_CASE:        do_case(c);     break;
     case T_DEFAULT:     do_default(c);  break;
     case T_RETURN:      do_return(c);   break;
-    case T_TRY:         do_try(c);      break;
-    case T_THROW:       do_throw(c);    break;
     case '{':           do_block(c);    break;
     case ';':           ;               break;
     default:            BobSaveToken(c,tkn);
@@ -820,65 +816,6 @@ static void do_default(BobCompiler *c)
     }
     else
         BobParseError(c,"Default outside of switch");
-}
-
-/* do_try - compile the 'try' statement */
-static void do_try(BobCompiler *c)
-{
-    int finally,tkn;
-    TCENTRY *entry;
-    
-    /* make a new try/catch entry */
-    if (!(entry = (TCENTRY *)BobAlloc(c->ic,sizeof(TCENTRY))))
-        BobInsufficientMemory(c->ic);
-
-    /* compile the protected block */
-    frequire(c,'{');
-    entry->start = codeaddr(c);
-    do_block(c);
-    entry->end = codeaddr(c);
-
-    /* branch to the 'finally' code */
-    putcbyte(c,BobOpBR);
-    finally = putcword(c,NIL);
-
-    /* handle a 'catch' clause */
-    if ((tkn = BobToken(c)) == T_CATCH) {
-
-        /* get the formal parameter */
-        frequire(c,'(');
-        frequire(c,T_IDENTIFIER);
-        frequire(c,')');
-
-        /* compile the catch block */
-        entry->handler = codeaddr(c);
-        frequire(c,'{');
-        do_block(c);
-        tkn = BobToken(c);
-    }
-
-    /* start of the 'finally' code or the end of the statement */
-    fixup(c,finally,codeaddr(c));
-
-    /* handle a 'finally' clause */
-    if (tkn == T_FINALLY) {
-        frequire(c,'{');
-        do_block(c);
-    }
-    else
-        BobSaveToken(c,tkn);
-
-    /* add the new exception entry */
-    entry->next = c->exceptions;
-    c->exceptions = entry;
-}
-
-/* do_throw - compile the 'throw' statement */
-static void do_throw(BobCompiler *c)
-{
-    do_expr(c);
-    putcbyte(c,BobOpTHROW);
-    frequire(c,';');
 }
 
 /* do_block - compile the {} expression */

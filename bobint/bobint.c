@@ -397,8 +397,6 @@ static void Execute(BobInterpreter *c)
             while (--n >= 0)
                 *--p = BobPop(c);
             break;
-        case BobOpTHROW:
-            break;
         default:
             BadOpcode(c,c->pc[-1]);
             break;

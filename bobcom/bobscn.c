@@ -30,10 +30,6 @@ static struct { char *kt_keyword; int kt_token; } ktab[] = {
 { "nil",        T_NIL           },
 { "super",      T_SUPER         },
 { "new",        T_NEW           },
-{ "try",        T_TRY           },
-{ "catch",      T_CATCH         },
-{ "finally",    T_FINALLY       },
-{ "throw",      T_THROW         },
 { NULL,         0               }};
 
 /* BobToken name table */
@@ -79,11 +75,7 @@ static char *t_names[] = {
 "define",
 "super",
 "new",
-"..",
-"try",
-"catch",
-"finally",
-"throw"
+".."
 };
 
 /* prototypes */
