@@ -83,6 +83,7 @@ typedef struct sentry SENTRY;
 struct sentry {
     int level;                  /* block level */
     int label;                  /* label */
+    SENTRY *next;               /* next entry */
 };
 
 /* case entry structure */
@@ -100,6 +101,7 @@ struct swentry {
     CENTRY *cases;
     int defaultLabel;
     int label;
+    SWENTRY *next;
 };
 
 /* try/catch/finally entry structure */
@@ -139,9 +141,9 @@ struct BobCompiler {
     int blockLevel;                     /* compiler - nesting level */
     ATABLE *arguments;                  /* compiler - argument frames */
     TCENTRY *exceptions;                /* compiler - exceptions */
-    SENTRY bstack[SSIZE],*bsp,*bsbase;  /* compiler - break stack */
-    SENTRY cstack[SSIZE],*csp,*csbase;  /* compiler - continue stack */
-    SWENTRY sstack[SSIZE],*ssp,*ssbase; /* compiler - switch stack */
+    SENTRY *bsp;                        /* compiler - break stack */
+    SENTRY *csp;                        /* compiler - continue stack */
+    SWENTRY *ssp;                       /* compiler - switch stack */
     unsigned char *codebuf;             /* compiler - code buffer */
     unsigned char *cbase,*cptr,*ctop;   /* compiler - code buffer positions */
     BobValue literalbuf;                /* compiler - literal buffer */

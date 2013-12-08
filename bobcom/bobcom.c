@@ -36,14 +36,14 @@ static void do_if(BobCompiler *c);
 static void do_while(BobCompiler *c);
 static void do_dowhile(BobCompiler *c);
 static void do_for(BobCompiler *c);
-static SENTRY *addbreak(BobCompiler *c,int lbl);
-static int rembreak(BobCompiler *c,SENTRY *old,int lbl);
+static void addbreak(BobCompiler *c,SENTRY *sentry,int lbl);
+static int rembreak(BobCompiler *c);
 static void do_break(BobCompiler *c);
-static SENTRY *addcontinue(BobCompiler *c,int lbl);
-static void remcontinue(BobCompiler *c,SENTRY *old);
+static void addcontinue(BobCompiler *c,SENTRY *centry,int lbl);
+static void remcontinue(BobCompiler *c);
 static void do_continue(BobCompiler *c);
-static SWENTRY *addswitch(BobCompiler *c);
-static void remswitch(BobCompiler *c,SWENTRY *old);
+static void addswitch(BobCompiler *c,SWENTRY *swentry);
+static void remswitch(BobCompiler *c);
 static void do_switch(BobCompiler *c);
 static void do_case(BobCompiler *c);
 static void do_default(BobCompiler *c);
@@ -170,9 +170,9 @@ static void SetupCompiler(BobCompiler *c)
 {
     c->cbase = c->cptr = c->codebuf;
     c->lbase = c->lptr = 0;
-    c->bsbase = c->bsp = c->bstack - 1;
-    c->csbase = c->csp = c->cstack - 1;
-    c->ssbase = c->ssp = c->sstack - 1;
+    c->bsp = NULL;
+    c->csp = NULL;
+    c->ssp = NULL;
     c->arguments = NULL;
     c->blockLevel = 0;
 }
@@ -338,8 +338,8 @@ static void compile_code(BobCompiler *c,char *name)
     int oldLevel,argc,rcnt,ocnt,nxt,tkn;
     BobValue code,*src,*dst;
     ATABLE atable;
-    SENTRY *oldbsbase,*oldcsbase;
-    SWENTRY *oldssbase;
+    SENTRY *oldbsp,*oldcsp;
+    SWENTRY *oldssp;
     LineNumberBlock *oldlines,*oldcblock;
     unsigned char *oldcbase,*cptr;
     long oldlbase,size;
@@ -353,9 +353,9 @@ static void compile_code(BobCompiler *c,char *name)
     oldLevel = c->blockLevel;
     oldcbase = c->cbase;
     oldlbase = c->lbase;
-    oldbsbase = c->bsbase;
-    oldcsbase = c->csbase;
-    oldssbase = c->ssbase;
+    oldbsp = c->bsp;
+    oldcsp = c->csp;
+    oldssp = c->ssp;
     oldlines = c->lineNumbers;
     oldcblock = c->currentBlock;
     
@@ -364,9 +364,6 @@ static void compile_code(BobCompiler *c,char *name)
     c->blockLevel = 0;
     c->cbase = c->cptr;
     c->lbase = c->lptr;
-    c->bsbase = c->bsp;
-    c->csbase = c->csp;
-    c->ssbase = c->ssp;
     c->lineNumbers = c->currentBlock = NULL;
 
     /* name is the first literal */
@@ -458,9 +455,9 @@ static void compile_code(BobCompiler *c,char *name)
     PopArgFrame(c);
     c->cptr = c->cbase; c->cbase = oldcbase;
     c->lptr = c->lbase; c->lbase = oldlbase;
-    c->bsp = c->bsbase; c->bsbase = oldbsbase;
-    c->csp = c->csbase; c->csbase = oldcsbase;
-    c->ssp = c->ssbase; c->ssbase = oldssbase;
+    c->bsp = oldbsp;
+    c->csp = oldcsp;
+    c->ssp = oldssp;
     c->blockLevel = oldLevel;
     c->lineNumbers = oldlines;
     c->currentBlock = oldcblock;
@@ -503,7 +500,7 @@ static void do_if(BobCompiler *c)
 /* do_while - compile the 'while' expression */
 static void do_while(BobCompiler *c)
 {
-    SENTRY *ob,*oc;
+    SENTRY bentry,centry;
     int nxt,end;
 
     /* compile the test expression */
@@ -515,11 +512,11 @@ static void do_while(BobCompiler *c)
     end = putcword(c,NIL);
 
     /* compile the loop body */
-    ob = addbreak(c,end);
-    oc = addcontinue(c,nxt);
+    addbreak(c,&bentry,end);
+    addcontinue(c,&centry,nxt);
     do_statement(c);
-    end = rembreak(c,ob,end);
-    remcontinue(c,oc);
+    end = rembreak(c);
+    remcontinue(c);
 
     /* branch back to the start of the loop */
     putcbyte(c,BobOpBR);
@@ -532,18 +529,18 @@ static void do_while(BobCompiler *c)
 /* do_dowhile - compile the do/while' expression */
 static void do_dowhile(BobCompiler *c)
 {
-    SENTRY *ob,*oc;
+    SENTRY bentry,centry;
     int nxt,end=0;
 
     /* remember the start of the loop */
     nxt = codeaddr(c);
 
     /* compile the loop body */
-    ob = addbreak(c,0);
-    oc = addcontinue(c,nxt);
+    addbreak(c,&bentry,end);
+    addcontinue(c,&centry,nxt);
     do_statement(c);
-    end = rembreak(c,ob,end);
-    remcontinue(c,oc);
+    end = rembreak(c);
+    remcontinue(c);
 
     /* compile the test expression */
     frequire(c,T_WHILE);
@@ -562,7 +559,7 @@ static void do_dowhile(BobCompiler *c)
 static void do_for(BobCompiler *c)
 {
     int tkn,nxt,end,body,update;
-    SENTRY *ob,*oc;
+    SENTRY bentry,centry;
 
     /* compile the initialization expression */
     frequire(c,'(');
@@ -607,11 +604,11 @@ static void do_for(BobCompiler *c)
 
     /* compile the loop body */
     fixup(c,body,codeaddr(c));
-    ob = addbreak(c,end);
-    oc = addcontinue(c,update);
+    addbreak(c,&bentry,end);
+    addcontinue(c,&centry,nxt);
     do_statement(c);
-    end = rembreak(c,ob,end);
-    remcontinue(c,oc);
+    end = rembreak(c);
+    remcontinue(c);
 
     /* branch back to the update code */
     putcbyte(c,BobOpBR);
@@ -622,28 +619,26 @@ static void do_for(BobCompiler *c)
 }
 
 /* addbreak - add a break level to the stack */
-static SENTRY *addbreak(BobCompiler *c,int lbl)
+static void addbreak(BobCompiler *c,SENTRY *sentry,int lbl)
 {
-    SENTRY *old=c->bsp;
-    if (++c->bsp < &c->bstack[SSIZE]) {
-        c->bsp->level = c->blockLevel;
-        c->bsp->label = lbl;
-    }
-    else
-        BobParseError(c,"Too many nested loops");
-    return old;
+    sentry->level = c->blockLevel;
+    sentry->label = lbl;
+    sentry->next = c->bsp;
+    c->bsp = sentry;
 }
 
 /* rembreak - remove a break level from the stack */
-static int rembreak(BobCompiler *c,SENTRY *old,int lbl)
+static int rembreak(BobCompiler *c)
 {
-   return c->bsp > old ? (c->bsp--)->label : lbl;
+   int lbl = c->bsp->label;
+   c->bsp = c->bsp->next;
+   return lbl;
 }
 
 /* do_break - compile the 'break' statement */
 static void do_break(BobCompiler *c)
 {
-    if (c->bsp > c->bsbase) {
+    if (c->bsp) {
         UnwindStack(c,c->blockLevel - c->bsp->level);
         putcbyte(c,BobOpBR);
         c->bsp->label = putcword(c,c->bsp->label);
@@ -653,28 +648,24 @@ static void do_break(BobCompiler *c)
 }
 
 /* addcontinue - add a continue level to the stack */
-static SENTRY *addcontinue(BobCompiler *c,int lbl)
+static void addcontinue(BobCompiler *c,SENTRY *centry,int lbl)
 {
-    SENTRY *old=c->csp;
-    if (++c->csp < &c->cstack[SSIZE]) {
-        c->csp->level = c->blockLevel;
-        c->csp->label = lbl;
-    }
-    else
-        BobParseError(c,"Too many nested loops");
-    return old;
+    centry->level = c->blockLevel;
+    centry->label = lbl;
+    centry->next = c->csp;
+    c->csp = centry;
 }
 
 /* remcontinue - remove a continue level from the stack */
-static void remcontinue(BobCompiler *c,SENTRY *old)
+static void remcontinue(BobCompiler *c)
 {
-    c->csp = old;
+    c->csp = c->csp->next;
 }
 
 /* do_continue - compile the 'continue' statement */
 static void do_continue(BobCompiler *c)
 {
-    if (c->csp > c->csbase) {
+    if (c->csp) {
         UnwindStack(c,c->blockLevel - c->bsp->level);
         putcbyte(c,BobOpBR);
         putcword(c,c->csp->label);
@@ -691,36 +682,31 @@ static void UnwindStack(BobCompiler *c,int levels)
 }
 
 /* addswitch - add a switch level to the stack */
-static SWENTRY *addswitch(BobCompiler *c)
+static void addswitch(BobCompiler *c,SWENTRY *swentry)
 {
-    SWENTRY *old=c->ssp;
-    if (++c->ssp < &c->sstack[SSIZE]) {
-        c->ssp->nCases = 0;
-        c->ssp->cases = NULL;
-        c->ssp->defaultLabel = NIL;
-    }
-    else
-        BobParseError(c,"Too many nested switch statements");
-    return old;
+    swentry->nCases = 0;
+    swentry->cases = NULL;
+    swentry->defaultLabel = NIL;
+    swentry->next = c->ssp;
 }
 
 /* remswitch - remove a switch level from the stack */
-static void remswitch(BobCompiler *c,SWENTRY *old)
+static void remswitch(BobCompiler *c)
 {
     CENTRY *entry,*next;
     for (entry = c->ssp->cases; entry != NULL; entry = next) {
         next = entry->next;
         BobFree(c->ic,entry);
     }
-    c->ssp = old;
+    c->ssp = c->ssp->next;
 }
 
 /* do_switch - compile the 'switch' statement */
 static void do_switch(BobCompiler *c)
 {
     int dispatch,end,cnt;
-    SENTRY *ob;
-    SWENTRY *os;
+    SENTRY bentry;
+    SWENTRY swentry;
     CENTRY *e;
 
     /* compile the test expression */
@@ -731,10 +717,10 @@ static void do_switch(BobCompiler *c)
     dispatch = putcword(c,NIL);
 
     /* compile the body of the switch statement */
-    os = addswitch(c);
-    ob = addbreak(c,0);
+    addswitch(c,&swentry);
+    addbreak(c,&bentry,0);
     do_statement(c);
-    end = rembreak(c,ob,0);
+    end = rembreak(c);
 
     /* branch to the end of the statement */
     putcbyte(c,BobOpBR);
@@ -762,13 +748,13 @@ static void do_switch(BobCompiler *c)
     fixup(c,end,codeaddr(c));
 
     /* remove the switch context */
-    remswitch(c,os);
+    remswitch(c);
 }
 
 /* do_case - compile the 'case' statement */
 static void do_case(BobCompiler *c)
 {
-    if (c->ssp > c->ssbase) {
+    if (c->ssp) {
         CENTRY **pNext,*entry;
         int value;
 
@@ -830,7 +816,7 @@ static void do_case(BobCompiler *c)
 /* do_default - compile the 'default' statement */
 static void do_default(BobCompiler *c)
 {
-    if (c->ssp > c->ssbase) {
+    if (c->ssp) {
         frequire(c,':');
         c->ssp->defaultLabel = codeaddr(c);
     }
@@ -1719,7 +1705,6 @@ static void PopArgFrame(BobCompiler *c)
     for (arg = c->arguments->at_arguments; arg != NULL; arg = nxt) {
         nxt = arg->arg_next;
         BobFree(c->ic,(char *)arg);
-        arg = nxt;
     }
     c->arguments = c->arguments->at_next;
 }
