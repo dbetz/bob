@@ -116,7 +116,6 @@ struct TCENTRY {
 /* limits */
 #define TKNSIZE         255     /* maximum BobToken size */
 #define LSIZE           255     /* maximum line size */
-#define SSIZE           20      /* break/continue/switch stack size */
 
 /* line number entry */
 typedef struct LineNumberEntry LineNumberEntry;

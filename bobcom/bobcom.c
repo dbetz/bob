@@ -160,9 +160,7 @@ BobCompiler *BobMakeCompiler(BobInterpreter *ic,void *buf,size_t size,long lsize
 /* BobFreeCompiler - free the compiler structure */
 void BobFreeCompiler(BobCompiler *c)
 {
-	if (c->codebuf)
-		BobFree(c->ic,c->codebuf);
-	BobFree(c->ic,c);
+    BobUnprotectPointer(c->ic,&c->literalbuf);
 }
 
 /* SetupCompiler - setup the compiler context */

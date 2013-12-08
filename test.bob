@@ -1,0 +1,11 @@
+define foo(x)
+{
+  for (i = 0; i < 100; ++i) {
+    if ((i % 2) == 0)
+      continue;
+    if (i < x)
+      stdout.Display(i, "\n");
+    else
+      break;
+  }
+}
