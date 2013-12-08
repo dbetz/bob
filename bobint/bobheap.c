@@ -41,6 +41,7 @@ BobInterpreter *BobMakeInterpreter(void *buf,size_t size,size_t stackSize)
     /* initialize the semi-spaces */
     c->oldSpace = InitMemorySpace((char *)c->stack + stackSizeInBytes, memorySpaceSize);
     c->newSpace = InitMemorySpace((char *)c->oldSpace + memorySpaceSize, memorySpaceSize);
+    c->gcCount = 0;
         
     /* return the new interpreter context */
     return c;
@@ -284,15 +285,17 @@ void BobCollectGarbage(BobInterpreter *c)
         c->cbase = BobStringAddress(BobCompiledCodeBytecodes(c->code));
         c->pc = c->cbase + pcoff;
     }
+    
+    /* count the garbage collections */
+    ++c->gcCount;
 
     {
 		char buf[128];
 		sprintf(buf,
-				" - %lu bytes free out of %lu, total memory %lu, allocations %lu]\n",
+				" - %lu bytes free out of %lu, collections %lu]\n",
 				(unsigned long)(c->newSpace->top - c->newSpace->free),
 				(unsigned long)(c->newSpace->top - c->newSpace->base),
-				(unsigned long)c->totalMemory,
-				(unsigned long)c->allocCount);
+				(unsigned long)c->gcCount);
 		BobStreamPutS(buf,c->standardError);
 	}
       

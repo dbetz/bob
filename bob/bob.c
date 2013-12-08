@@ -133,9 +133,6 @@ int main(int argc,char **argv)
                     interactiveP = FALSE;
                     outputName = NULL;
                     break;
-                case 'g':   /* emit debugging information when compiling */
-                    c->compiler->emitLineNumbersP = TRUE;
-                    break; 
                 case 'i':   /* enter interactive mode after loading */
                     interactiveP = TRUE;
                     break;
@@ -287,7 +284,6 @@ static void Usage(void)
 {
     fprintf(stderr,"\
 usage: bob [-c file]     compile a source file\n\
-           [-g]          include debugging information\n\
            [-i]          enter interactive mode after loading\n\
            [-o file]     object file name for compile\n\
            [-v]          enable verbose mode\n\

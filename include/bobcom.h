@@ -104,22 +104,6 @@ struct swentry {
 #define TKNSIZE         255     /* maximum BobToken size */
 #define LSIZE           255     /* maximum line size */
 
-/* line number entry */
-typedef struct LineNumberEntry LineNumberEntry;
-struct LineNumberEntry {
-    int line;
-    int pc;
-};
-
-/* line number block */
-#define kLineNumberBlockSize    128
-typedef struct LineNumberBlock LineNumberBlock;
-struct LineNumberBlock {
-    LineNumberBlock *next;
-    int count;
-    LineNumberEntry entries[kLineNumberBlockSize];
-};
-
 /* compiler context structure */
 struct BobCompiler {
     BobInterpreter *ic;                 /* compiler - interpreter context */
@@ -133,16 +117,12 @@ struct BobCompiler {
     unsigned char *cbase,*cptr,*ctop;   /* compiler - code buffer positions */
     BobValue literalbuf;                /* compiler - literal buffer */
     long lbase,lptr,ltop;               /* compiler - literal buffer positions */
-    int emitLineNumbersP;               /* compiler - true to emit line number opcodes */
-    LineNumberBlock *lineNumbers;       /* compiler - line number table entries */
-    LineNumberBlock *currentBlock;      /* compiler - where to store new line numbers */
     BobIntegerType t_value;             /* scanner - integer value */
     BobFloatType t_fvalue;              /* scanner - float value */
     char t_token[TKNSIZE+1];            /* scanner - token string */
-    int lineNumberChangedP;             /* scanner - line number has changed */
-    int lineNumber;                     /* scanner - line number */
     int savedToken;                     /* scanner - look ahead BobToken */
     int savedChar;                      /* scanner - look ahead character */
+    int lineNumber;                     /* scanner - line number */
     char line[LSIZE+1];                 /* scanner - last input line */
     char *linePtr;                      /* scanner - line pointer */
     int atEOF;                          /* scanner - input end of file flag */

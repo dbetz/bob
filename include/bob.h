@@ -169,6 +169,7 @@ struct BobInterpreter {
     BobProtectedPtrs *protectedPtrs;/* protected pointers */
     BobMemorySpace *oldSpace;       /* old memory space */
     BobMemorySpace *newSpace;       /* new memory space */
+    unsigned long gcCount;          /* number of garbage collections */
     unsigned long totalMemory;      /* total memory allocated */
     unsigned long allocCount;       /* number of calls to BobAlloc */
     BobStream *standardInput;       /* standard input stream */

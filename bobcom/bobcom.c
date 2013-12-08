@@ -115,10 +115,6 @@ static int codeaddr(BobCompiler *c);
 static int putcbyte(BobCompiler *c,int b);
 static int putcword(BobCompiler *c,int w);
 static void fixup(BobCompiler *c,int chn,int val);
-static void AddLineNumber(BobCompiler *c,int line,int pc);
-static LineNumberBlock *AddLineNumberBlock(BobCompiler *c);
-static void FreeLineNumbers(BobCompiler *c);
-static void DumpLineNumbers(BobCompiler *c);
 
 /* BobMakeCompiler - initialize the compiler */
 BobCompiler *BobMakeCompiler(BobInterpreter *ic,void *buf,size_t size,long lsize)
@@ -137,9 +133,6 @@ BobCompiler *BobMakeCompiler(BobInterpreter *ic,void *buf,size_t size,long lsize
     c->codebuf = (unsigned char *)(c + 1);
     c->cptr = c->codebuf; c->ctop = c->codebuf + csize;
 
-    /* initialize the line number table */
-    c->lineNumbers = c->currentBlock = NULL;
-
     /* allocate and initialize the literal buffer */
     BobProtectPointer(ic,&c->literalbuf);
     c->literalbuf = BobMakeVector(ic,lsize);
@@ -147,9 +140,6 @@ BobCompiler *BobMakeCompiler(BobInterpreter *ic,void *buf,size_t size,long lsize
 
     /* link the compiler and interpreter contexts to each other */
     c->ic = ic;
-
-    /* don't emit line number opcodes */
-    c->emitLineNumbersP = FALSE;
 
     /* return the new compiler context */
     return c;
@@ -203,11 +193,9 @@ BobValue BobCompileExpr(BobInterpreter *ic)
     addliteral(c,ic->nilValue);
     
     /* generate the argument frame */
-    c->lineNumberChangedP = FALSE;
     putcbyte(c,BobOpAFRAME);
     putcbyte(c,2);
     putcbyte(c,0);
-    c->lineNumberChangedP = TRUE;
     
     /* compile the code */
     do_statement(c);
@@ -334,7 +322,6 @@ static void compile_code(BobCompiler *c,char *name)
     ATABLE atable;
     SENTRY *oldbsp,*oldcsp;
     SWENTRY *oldssp;
-    LineNumberBlock *oldlines,*oldcblock;
     unsigned char *oldcbase,*cptr;
     long oldlbase,size;
     
@@ -350,15 +337,12 @@ static void compile_code(BobCompiler *c,char *name)
     oldbsp = c->bsp;
     oldcsp = c->csp;
     oldssp = c->ssp;
-    oldlines = c->lineNumbers;
-    oldcblock = c->currentBlock;
     
     /* initialize new compiler state */
     PushArgFrame(c,&atable);
     c->blockLevel = 0;
     c->cbase = c->cptr;
     c->lbase = c->lptr;
-    c->lineNumbers = c->currentBlock = NULL;
 
     /* name is the first literal */
     if (name)
@@ -372,11 +356,9 @@ static void compile_code(BobCompiler *c,char *name)
 
     /* generate the argument frame */
     cptr = c->cptr;
-    c->lineNumberChangedP = FALSE;
     putcbyte(c,BobOpAFRAME);
     putcbyte(c,0);
     putcbyte(c,0);
-    c->lineNumberChangedP = TRUE;
     
     /* get the argument list */
     frequire(c,'(');
@@ -437,14 +419,6 @@ static void compile_code(BobCompiler *c,char *name)
     while (--size >= 0)
         *dst++ = *src++;
     
-    /* free the line number table */
-    if (name && c->emitLineNumbersP) {
-        printf("%s:\n",name);
-        DumpLineNumbers(c);
-        printf("\n");
-    }
-    FreeLineNumbers(c);
-
     /* pop the current argument frame and buffer pointers */
     PopArgFrame(c);
     c->cptr = c->cbase; c->cbase = oldcbase;
@@ -453,8 +427,6 @@ static void compile_code(BobCompiler *c,char *name)
     c->csp = oldcsp;
     c->ssp = oldssp;
     c->blockLevel = oldLevel;
-    c->lineNumbers = oldlines;
-    c->currentBlock = oldcblock;
     
     /* make a closure */
     code_literal(c,addliteral(c,code));
@@ -1872,10 +1844,6 @@ static int putcbyte(BobCompiler *c,int b)
     int addr = codeaddr(c);
     if (c->cptr >= c->ctop)
         BobCallErrorHandler(c->ic,BobErrTooMuchCode,c);
-	if (c->emitLineNumbersP && c->lineNumberChangedP) {
-		c->lineNumberChangedP = FALSE;
-        AddLineNumber(c,c->lineNumber,codeaddr(c));
-    }
     *c->cptr++ = b;
     return addr;
 }
@@ -1901,57 +1869,5 @@ static void fixup(BobCompiler *c,int chn,int val)
         nxt = (c->cbase[chn] & 0xFF) | (c->cbase[chn+1] << 8);
         c->cbase[chn] = val;
         c->cbase[chn+1] = hval;
-    }
-}
-
-/* AddLineNumber - add a line number entry */
-static void AddLineNumber(BobCompiler *c,int line,int pc)
-{
-    LineNumberBlock *current;
-    LineNumberEntry *entry;
-    if (!(current = c->currentBlock) || current->count >= kLineNumberBlockSize)
-        current = AddLineNumberBlock(c);
-    entry = &current->entries[current->count++];
-    entry->line = line;
-    entry->pc = pc;
-}
-
-/* AddLineNumberBlock - add a new block of line numbers */
-static LineNumberBlock *AddLineNumberBlock(BobCompiler *c)
-{
-    LineNumberBlock *current,*block;
-    if (!(block = (LineNumberBlock *)BobAlloc(c->ic,sizeof(LineNumberBlock))))
-        BobInsufficientMemory(c->ic);
-    block->count = 0;
-    block->next = NULL;
-    if (!(current = c->currentBlock))
-        c->lineNumbers = block;
-    else
-        current->next = block;
-    c->currentBlock = block;
-    return block;
-}
-
-/* FreeLineNumbers - free the line number table */
-static void FreeLineNumbers(BobCompiler *c)
-{
-    LineNumberBlock *block,*next;
-    for (block = c->lineNumbers; block != NULL; block = next) {
-        next = block->next;
-        BobFree(c->ic,block);
-    }
-    c->lineNumbers = c->currentBlock = NULL;
-}
-
-/* DumpLineNumbers - dump the line number table */
-static void DumpLineNumbers(BobCompiler *c)
-{
-    LineNumberBlock *block;
-    for (block = c->lineNumbers; block != NULL; block = block->next) {
-        int i;
-        for (i = 0; i < block->count; ++i) {
-            LineNumberEntry *entry = &block->entries[i];
-            printf("  %d %04x\n",entry->line,entry->pc);
-        }
     }
 }

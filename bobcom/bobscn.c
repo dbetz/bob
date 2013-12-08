@@ -100,7 +100,6 @@ void BobInitScanner(BobCompiler *c,BobStream *s)
     
     /* setup the line buffer */
     c->linePtr = c->line; *c->linePtr = '\0';
-    c->lineNumberChangedP = FALSE;
     c->lineNumber = 0;
 
     /* no lookahead yet */
@@ -593,7 +592,6 @@ static int getch(BobCompiler *c)
                  (ch = BobStreamGetC(c->input)) != BobStreamEOF && ch != '\n'; )
                 *c->linePtr++ = ch;
             *c->linePtr++ = '\n'; *c->linePtr = '\0';
-            c->lineNumberChangedP = TRUE;
             c->linePtr = c->line;
             ++c->lineNumber;
 

@@ -61,6 +61,5 @@
 #define BobOpCLOSE      0x33    /* create a closure */
 #define BobOpSWITCH     0x34    /* switch dispatch */
 #define BobOpARGSGE     0x35    /* argc greater than or equal to */
-#define BobOpTHROW      0x36    /* throw an exception */
 
 #endif

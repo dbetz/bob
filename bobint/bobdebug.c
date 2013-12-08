@@ -72,7 +72,6 @@ OTDEF otab[] = {
 {       BobOpCLOSE,     "CLOSE",        FMT_NONE        },
 {       BobOpSWITCH,    "SWITCH",       FMT_SWITCH      },
 {       BobOpARGSGE,    "ARGSGE",       FMT_BYTE        },
-{       BobOpTHROW,     "THROW",        FMT_NONE        },
 {0,0,0}
 };
 
