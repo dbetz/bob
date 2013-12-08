@@ -66,8 +66,8 @@
 /* argument structure */
 typedef struct argument ARGUMENT;
 struct argument {
-    char *arg_name;             /* argument name */
     struct argument *arg_next;  /* next argument */
+    char arg_name[1];           /* argument name */
 };
 
 /* argument table structure */

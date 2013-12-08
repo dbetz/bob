@@ -89,9 +89,7 @@ static void do_super(BobCompiler *c,PVAL *pv);
 static void do_method_call(BobCompiler *c,PVAL *pv);
 static void do_index(BobCompiler *c,PVAL *pv);
 static void AddArgument(BobCompiler *c,ATABLE *atable,char *name);
-static ATABLE *MakeArgFrame(BobCompiler *c);
 static void PushArgFrame(BobCompiler *c,ATABLE *atable);
-static void PushNewArgFrame(BobCompiler *c);
 static void PopArgFrame(BobCompiler *c);
 static void FreeArguments(BobCompiler *c);
 static int FindArgument(BobCompiler *c,char *name,int *plev,int *poff);
@@ -123,7 +121,6 @@ static void AddLineNumber(BobCompiler *c,int line,int pc);
 static LineNumberBlock *AddLineNumberBlock(BobCompiler *c);
 static void FreeLineNumbers(BobCompiler *c);
 static void DumpLineNumbers(BobCompiler *c);
-static char *copystring(BobCompiler *c,char *str);
 
 /* BobMakeCompiler - initialize the compiler */
 BobCompiler *BobMakeCompiler(BobInterpreter *ic,void *buf,size_t size,long lsize)
@@ -340,6 +337,7 @@ static void compile_code(BobCompiler *c,char *name)
     BobInterpreter *ic = c->ic;
     int oldLevel,argc,rcnt,ocnt,nxt,tkn;
     BobValue code,*src,*dst;
+    ATABLE atable;
     SENTRY *oldbsbase,*oldcsbase;
     SWENTRY *oldssbase;
     LineNumberBlock *oldlines,*oldcblock;
@@ -362,7 +360,7 @@ static void compile_code(BobCompiler *c,char *name)
     oldcblock = c->currentBlock;
     
     /* initialize new compiler state */
-    PushNewArgFrame(c);
+    PushArgFrame(c,&atable);
     c->blockLevel = 0;
     c->cbase = c->cptr;
     c->lbase = c->lptr;
@@ -902,18 +900,16 @@ static void do_throw(BobCompiler *c)
 /* do_block - compile the {} expression */
 static void do_block(BobCompiler *c)
 {
-    ATABLE *atable = NULL;
+    ATABLE atable;
+    int tcnt = 0;
     int tkn;
     
     /* handle local declarations */
     if ((tkn = BobToken(c)) == T_LOCAL) {
-        int ptr,tcnt=0;
+        int ptr;
 
-        /* make a new argument frame */
-        atable = MakeArgFrame(c);
-    
         /* establish the new frame */
-        PushArgFrame(c,atable);
+        PushArgFrame(c,&atable);
 
         /* create a new argument frame */
         putcbyte(c,BobOpCFRAME);
@@ -936,7 +932,7 @@ static void do_block(BobCompiler *c)
                 }
                 else
                     BobSaveToken(c,tkn);
-                AddArgument(c,atable,name);
+                AddArgument(c,c->arguments,name);
                 ++tcnt;
             } while ((tkn = BobToken(c)) == ',');
             require(c,tkn,';');
@@ -958,7 +954,7 @@ static void do_block(BobCompiler *c)
         putcbyte(c,BobOpNIL);
 
     /* pop the local frame */
-    if (atable) {
+    if (tcnt > 0) {
         putcbyte(c,BobOpUNFRAME);
         PopArgFrame(c);
         --c->blockLevel;
@@ -1699,53 +1695,33 @@ static void do_index(BobCompiler *c,PVAL *pv)
 static void AddArgument(BobCompiler *c,ATABLE *atable,char *name)
 {
     ARGUMENT *arg;
-    if ((arg = (ARGUMENT *)BobAlloc(c->ic,sizeof(ARGUMENT))) == NULL)
+    if ((arg = (ARGUMENT *)BobAlloc(c->ic,sizeof(ARGUMENT) + strlen(name))) == NULL)
         BobInsufficientMemory(c->ic);
-    arg->arg_name = copystring(c,name);
+    strcpy(arg->arg_name,name);
     arg->arg_next = NULL;
     *atable->at_pNextArgument = arg;
     atable->at_pNextArgument = &arg->arg_next;
 }
 
-/* MakeArgFrame - make a new argument frame */
-static ATABLE *MakeArgFrame(BobCompiler *c)
-{
-    ATABLE *atable;
-    if ((atable = (ATABLE *)BobAlloc(c->ic,sizeof(ATABLE))) == NULL)
-        BobInsufficientMemory(c->ic);
-    atable->at_arguments = NULL;
-    atable->at_pNextArgument = &atable->at_arguments;
-    atable->at_next = NULL;
-    return atable;
-}
-
 /* PushArgFrame - push an argument frame onto the stack */
 static void PushArgFrame(BobCompiler *c,ATABLE *atable)
 {
+    atable->at_arguments = NULL;
+    atable->at_pNextArgument = &atable->at_arguments;
     atable->at_next = c->arguments;
     c->arguments = atable;
-}
-
-/* PushNewArgFrame - push a new argument frame onto the stack */
-static void PushNewArgFrame(BobCompiler *c)
-{
-    PushArgFrame(c,MakeArgFrame(c));
 }
 
 /* PopArgFrame - push an argument frame off the stack */
 static void PopArgFrame(BobCompiler *c)
 {
     ARGUMENT *arg,*nxt;
-    ATABLE *atable;
     for (arg = c->arguments->at_arguments; arg != NULL; arg = nxt) {
         nxt = arg->arg_next;
-        BobFree(c->ic,arg->arg_name);
         BobFree(c->ic,(char *)arg);
         arg = nxt;
     }
-    atable = c->arguments->at_next;
-    BobFree(c->ic,(char *)c->arguments);
-    c->arguments = atable;
+    c->arguments = c->arguments->at_next;
 }
 
 /* FreeArguments - free all argument frames */
@@ -2058,14 +2034,4 @@ static void DumpLineNumbers(BobCompiler *c)
             printf("  %d %04x\n",entry->line,entry->pc);
         }
     }
-}
-
-/* copystring - make a copy of a string */
-static char *copystring(BobCompiler *c,char *str)
-{
-    char *new;
-    if ((new = (char *)BobAlloc(c->ic,strlen(str)+1)) == NULL)
-        BobInsufficientMemory(c->ic);
-    strcpy(new,str);
-    return new;
 }
