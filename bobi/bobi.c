@@ -1,16 +1,17 @@
 /* bobi.c - the main routine */
 /*
-	Copyright (c) 2001, by David Michael Betz
-	All rights reserved
+    Copyright (c) 2001, by David Michael Betz
+    All rights reserved
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "bob.h"
 
-#define HEAP_SIZE   (1024 * 1024)
-#define EXPAND_SIZE (512 * 1024)
+// #define HEAP_SIZE   (1024 * 1024)
+// #define EXPAND_SIZE (512 * 1024)
 #define STACK_SIZE  (64 * 1025)
+#define INTERPRETER_SIZE    (1024 * 1024)
 
 /* console stream structure */
 typedef struct {
@@ -44,6 +45,7 @@ BobStreamDispatch consoleDispatch = {
 
 /* console stream */
 ConsoleStream consoleStream = { &consoleDispatch };
+static char interpreterSpace[INTERPRETER_SIZE];
 
 /* ErrorHandler - error handler callback */
 void ErrorHandler(BobInterpreter *c,int code,va_list ap)
@@ -57,7 +59,7 @@ void ErrorHandler(BobInterpreter *c,int code,va_list ap)
     default:
         BobShowError(c,code,ap);
         BobStackTrace(c);
-    	break;
+        break;
     }
     BobAbort(c);
 }
@@ -67,7 +69,7 @@ int main(int argc,char **argv)
 {
     BobUnwindTarget target;
     BobInterpreter *c;
-    
+
     /* check the argument list */
     if (argc != 2) {
         fprintf(stderr,"usage: bobi <object-file>\n");
@@ -75,17 +77,17 @@ int main(int argc,char **argv)
     }
 
     /* make the workspace */
-    if ((c = BobMakeInterpreter()) == NULL)
+    if ((c = BobMakeInterpreter(interpreterSpace,sizeof(interpreterSpace),STACK_SIZE)) == NULL)
         exit(1);
 
     /* setup standard i/o */
     c->standardInput = (BobStream *)&consoleStream;
     c->standardOutput = (BobStream *)&consoleStream;
     c->standardError = (BobStream *)&consoleStream;
-    
+
     /* setup the error handler */
     c->errorHandler = ErrorHandler;
-    
+
     /* setup the error handler target */
     BobPushUnwindTarget(c,&target);
 
@@ -94,25 +96,24 @@ int main(int argc,char **argv)
         exit(1);
 
     /* initialize the workspace */
-    if (!BobInitInterpreter(c, HEAP_SIZE,EXPAND_SIZE,STACK_SIZE))
+    if (!BobInitInterpreter(c))
         exit(1);
 
     /* use stdio for file i/o */
     BobUseStandardIO(c);
-     
+
     /* add the library functions to the symbol table */
     BobEnterLibrarySymbols(c);
 
     /* load the command line argument */
     BobLoadObjectFile(c,argv[1],NULL);
-    
+
     /* catch errors and restart read/eval/print loop */
     BobUnwindCatch(c);
-    
+
     /* pop the unwind target */
     BobPopUnwindTarget(c);
 
     /* return successfully */
     return 0;
 }
-

@@ -10,9 +10,11 @@
 #include "bob.h"
 #include "bobcom.h"
 
-#define HEAP_SIZE   (1024 * 1024)
-#define EXPAND_SIZE (512 * 1024)
 #define STACK_SIZE  (64 * 1025)
+#define INTERPRETER_SIZE    (1024 * 1024)
+#define COMPILER_SIZE       (1024 * 1024)
+// #define HEAP_SIZE   (1024 * 1024)
+// #define EXPAND_SIZE (512 * 1024)
 
 /* console stream structure */
 typedef struct {
@@ -46,6 +48,10 @@ BobStreamDispatch consoleDispatch = {
 
 /* console stream */
 ConsoleStream consoleStream = { &consoleDispatch };
+
+/* space for interpreter */
+static char interpreterSpace[INTERPRETER_SIZE];
+static char compilerSpace[COMPILER_SIZE];
 
 /* prototypes */
 static void CompileFile(BobInterpreter *c,char *iname,char *oname);
@@ -101,7 +107,7 @@ int main(int argc,char **argv)
 
     /* use the standard i/o and eval packages */
     BobUseStandardIO(c);
-    BobUseEval(c);
+    BobUseEval(c,compilerSpace,sizeof(compilerSpace));
 
     /* process arguments */
     for (i = 1; i < argc; ++i) {
