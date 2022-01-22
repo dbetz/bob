@@ -8,9 +8,10 @@
 #include <stdlib.h>
 #include "bob.h"
 
-#define HEAP_SIZE   (1024 * 1024)
-#define EXPAND_SIZE (512 * 1024)
+// #define HEAP_SIZE   (1024 * 1024)
+// #define EXPAND_SIZE (512 * 1024)
 #define STACK_SIZE  (64 * 1025)
+#define INTERPRETER_SIZE    (1024 * 1024)
 
 /* console stream structure */
 typedef struct {
@@ -45,6 +46,9 @@ BobStreamDispatch consoleDispatch = {
 /* console stream */
 ConsoleStream consoleStream = { &consoleDispatch };
 
+/* space for interpreter */
+static char interpreterSpace[INTERPRETER_SIZE];
+
 /* ErrorHandler - error handler callback */
 void ErrorHandler(BobInterpreter *c,int code,va_list ap)
 {
@@ -75,7 +79,7 @@ int main(int argc,char **argv)
     }
 
     /* make the workspace */
-    if ((c = BobMakeInterpreter()) == NULL)
+    if ((c = BobMakeInterpreter(interpreterSpace,sizeof(interpreterSpace),STACK_SIZE)) == NULL)
         exit(1);
 
     /* setup standard i/o */
@@ -94,7 +98,7 @@ int main(int argc,char **argv)
         exit(1);
 
     /* initialize the workspace */
-    if (!BobInitInterpreter(c, HEAP_SIZE,EXPAND_SIZE,STACK_SIZE))
+    if (!BobInitInterpreter(c))
         exit(1);
 
     /* use stdio for file i/o */

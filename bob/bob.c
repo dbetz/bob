@@ -11,7 +11,7 @@
 #include "bob.h"
 #include "bobcom.h"
 
-#if 0
+#if 1
 #define INTERPRETER_SIZE    (1024 * 1024)
 #define COMPILER_SIZE       (1024 * 1024)
 #define STACK_SIZE          (64 * 1025)
