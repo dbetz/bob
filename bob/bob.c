@@ -11,7 +11,7 @@
 #include "bob.h"
 #include "bobcom.h"
 
-#if 0
+#if 1
 #define INTERPRETER_SIZE    (1024 * 1024)
 #define COMPILER_SIZE       (1024 * 1024)
 #define STACK_SIZE          (64 * 1025)
@@ -68,10 +68,10 @@ static void Usage(void);
 /* main - the main routine */
 int main(int argc,char **argv)
 {
-	int interactiveP = TRUE;
+    int interactiveP = TRUE;
     BobUnwindTarget target;
     BobInterpreter *c;
-    
+
     /* make the workspace */
     if ((c = BobMakeInterpreter(interpreterSpace,sizeof(interpreterSpace),STACK_SIZE)) == NULL)
         exit(1);
@@ -80,10 +80,10 @@ int main(int argc,char **argv)
     c->standardInput = (BobStream *)&consoleStream;
     c->standardOutput = (BobStream *)&consoleStream;
     c->standardError = (BobStream *)&consoleStream;
-    
+
     /* setup the error handler */
     c->errorHandler = ErrorHandler;
-    
+
     /* setup the error handler target */
     BobPushUnwindTarget(c,&target);
 
@@ -97,7 +97,7 @@ int main(int argc,char **argv)
 
     /* use stdio for file i/o */
     BobUseStandardIO(c);
-     
+
     /* add the library functions to the symbol table */
     BobEnterLibrarySymbols(c);
 
@@ -119,7 +119,7 @@ int main(int argc,char **argv)
         for (i = 1; i < argc; ++i) {
             if (argv[i][0] == '-') {
                 switch (argv[i][1]) {
-			    case '?':
+                case '?':
                     Usage();
                     break;
                 case 'c':   /* compile source file */
@@ -160,11 +160,11 @@ int main(int argc,char **argv)
             }
         }
     }
-    
+
     /* read/eval/print loop */
     if (interactiveP)
         ReadEvalPrint(c);
-    
+
     /* pop the unwind target */
     BobPopUnwindTarget(c);
 
@@ -176,7 +176,7 @@ int main(int argc,char **argv)
 static void CompileFile(BobInterpreter *c,char *inputName,char *outputName)
 {
     char iname[1024],oname[1024],*p;
-    
+
     /* determine the input filename */
     if ((p = strrchr(inputName,'.')) == NULL) {
         strcpy(iname,inputName);
@@ -245,7 +245,7 @@ static void ReadEvalPrint(BobInterpreter *c)
 
     /* protect a pointer from the garbage collector */
     BobProtectPointer(c,&val);
-    
+
     for (;;) {
         printf("\n> "); fflush(stdout);
         if (fgets(lineBuffer,sizeof(lineBuffer),stdin)) {
@@ -291,4 +291,3 @@ usage: bob [-c file]     compile a source file\n\
            [file]        load a source or object file\n");
     exit(1);
 }
-

@@ -125,10 +125,10 @@ BobCompiler *BobMakeCompiler(BobInterpreter *ic,void *buf,size_t size,long lsize
     /* make sure there is enough space */
     if (size < sizeof(BobInterpreter))
         return NULL;
-        
+
     /* initialize the compiler context structure */
     c = (BobCompiler *)buf;
-    
+
     /* allocate and initialize the code buffer */
     c->codebuf = (unsigned char *)(c + 1);
     c->cptr = c->codebuf; c->ctop = c->codebuf + csize;
@@ -171,39 +171,39 @@ BobValue BobCompileExpr(BobInterpreter *ic)
     BobUnwindTarget target;
     int sts,tkn;
     long size;
-    
+
     /* initialize the compiler */
     SetupCompiler(c);
-    
+
     /* setup an unwind target */
     BobPushUnwindTarget(ic,&target);
     if ((sts = BobUnwindCatch(ic)) != 0) {
         FreeArguments(c);
         BobPopAndUnwind(ic,sts);
     }
-    
+
     /* check for end of file */
     if ((tkn = BobToken(c)) == T_EOF) {
         BobPopUnwindTarget(ic);
         return NULL;
     }
     BobSaveToken(c,tkn);
-    
+
     /* make dummy function name */
     addliteral(c,ic->nilValue);
-    
+
     /* generate the argument frame */
     putcbyte(c,BobOpAFRAME);
     putcbyte(c,2);
     putcbyte(c,0);
-    
+
     /* compile the code */
     do_statement(c);
     putcbyte(c,BobOpRETURN);
 
     /* make the bytecode array */
     code = BobMakeString(ic,c->cbase,c->cptr - c->cbase);
-    
+
     /* make the compiled code object */
     size = c->lptr - c->lbase;
     code = BobMakeCompiledCode(ic,BobFirstLiteral + size,code);
@@ -211,10 +211,10 @@ BobValue BobCompileExpr(BobInterpreter *ic)
     dst = BobCompiledCodeLiterals(code) + BobFirstLiteral;
     while (--size >= 0)
         *dst++ = *src++;
-    
+
     /* make a closure */
     code = BobMakeMethod(ic,code,ic->nilValue);
-    
+
     /* return the function */
     //BobDecodeProcedure(ic,code,ic->standardOutput);
     BobPopUnwindTarget(ic);
@@ -274,11 +274,11 @@ static void define_method(BobCompiler *c,char *name)
 {
     char selector[256];
     int tkn;
-    
+
     /* push the class */
     variable_ref(c,name);
     putcbyte(c,BobOpPUSH);
-    
+
     /* get the selector */
     for (;;) {
         frequire(c,T_IDENTIFIER);
@@ -294,10 +294,10 @@ static void define_method(BobCompiler *c,char *name)
     BobSaveToken(c,tkn);
     do_lit_symbol(c,selector);
     putcbyte(c,BobOpPUSH);
-    
+
     /* compile the code */
     compile_code(c,selector);
-    
+
      /* store the method as the value of the property */
     putcbyte(c,BobOpSETP);
 }
@@ -307,7 +307,7 @@ static void define_function(BobCompiler *c,char *name)
 {
     /* compile the code */
     compile_code(c,name);
-    
+
     /* store the function as the value of the global symbol */
     putcbyte(c,BobOpGSET);
     putcword(c,make_lit_symbol(c,name));
@@ -324,7 +324,7 @@ static void compile_code(BobCompiler *c,char *name)
     SWENTRY *oldssp;
     unsigned char *oldcbase,*cptr;
     long oldlbase,size;
-    
+
     /* initialize */
     argc = 2;   /* 'this' and '_next' */
     rcnt = argc;
@@ -337,7 +337,7 @@ static void compile_code(BobCompiler *c,char *name)
     oldbsp = c->bsp;
     oldcsp = c->csp;
     oldssp = c->ssp;
-    
+
     /* initialize new compiler state */
     PushArgFrame(c,&atable);
     c->blockLevel = 0;
@@ -349,7 +349,7 @@ static void compile_code(BobCompiler *c,char *name)
         make_lit_string(c,name);
     else
         addliteral(c,ic->nilValue);
-        
+
     /* the first arguments are always 'this' and '_next' */
     AddArgument(c,c->arguments,"this");
     AddArgument(c,c->arguments,"_next");
@@ -359,7 +359,7 @@ static void compile_code(BobCompiler *c,char *name)
     putcbyte(c,BobOpAFRAME);
     putcbyte(c,0);
     putcbyte(c,0);
-    
+
     /* get the argument list */
     frequire(c,'(');
     if ((tkn = BobToken(c)) != ')' && tkn != T_DOTDOT) {
@@ -410,7 +410,7 @@ static void compile_code(BobCompiler *c,char *name)
 
     /* make the bytecode array */
     code = BobMakeString(ic,c->cbase,c->cptr - c->cbase);
-    
+
     /* make the literal vector */
     size = c->lptr - c->lbase;
     code = BobMakeCompiledCode(ic,BobFirstLiteral + size,code);
@@ -418,7 +418,7 @@ static void compile_code(BobCompiler *c,char *name)
     dst = BobCompiledCodeLiterals(code) + BobFirstLiteral;
     while (--size >= 0)
         *dst++ = *src++;
-    
+
     /* pop the current argument frame and buffer pointers */
     PopArgFrame(c);
     c->cptr = c->cbase; c->cbase = oldcbase;
@@ -427,7 +427,7 @@ static void compile_code(BobCompiler *c,char *name)
     c->csp = oldcsp;
     c->ssp = oldssp;
     c->blockLevel = oldLevel;
-    
+
     /* make a closure */
     code_literal(c,addliteral(c,code));
     putcbyte(c,BobOpCLOSE);
@@ -571,7 +571,7 @@ static void do_for(BobCompiler *c)
     /* compile the loop body */
     fixup(c,body,codeaddr(c));
     addbreak(c,&bentry,end);
-    addcontinue(c,&centry,nxt);
+    addcontinue(c,&centry,update);
     do_statement(c);
     end = rembreak(c);
     remcontinue(c);
@@ -796,7 +796,7 @@ static void do_block(BobCompiler *c)
     ATABLE atable;
     int tcnt = 0;
     int tkn;
-    
+
     /* handle local declarations */
     if ((tkn = BobToken(c)) == T_LOCAL) {
         int ptr;
@@ -835,7 +835,7 @@ static void do_block(BobCompiler *c)
         /* fixup the local count */
         c->cbase[ptr] = tcnt;
     }
-    
+
     /* compile the statements in the block */
     if (tkn != '}') {
         do {
@@ -858,13 +858,13 @@ static void do_block(BobCompiler *c)
 static void do_return(BobCompiler *c)
 {
     int tkn;
-	if ((tkn = BobToken(c)) == ';')
-		putcbyte(c,BobOpNIL);
-	else {
-		BobSaveToken(c,tkn);
-		do_expr(c);
-		frequire(c,';');
-	}
+    if ((tkn = BobToken(c)) == ';')
+        putcbyte(c,BobOpNIL);
+    else {
+        BobSaveToken(c,tkn);
+        do_expr(c);
+        frequire(c,';');
+    }
     UnwindStack(c,c->blockLevel);
     putcbyte(c,BobOpRETURN);
 }
@@ -1347,7 +1347,7 @@ static void do_function(BobCompiler *c,PVAL *pv)
 {
     char name[256];
     int nameP,tkn;
-    
+
     /* check for a function name */
     switch (tkn = BobToken(c)) {
     case T_IDENTIFIER:
@@ -1475,7 +1475,7 @@ static void do_literal_object(BobCompiler *c,PVAL *pv)
 static void do_call(BobCompiler *c,PVAL *pv)
 {
     int tkn,n=2;
-    
+
     /* get the value of the function */
     rvalue(c,pv);
     putcbyte(c,BobOpPUSH);
@@ -1556,7 +1556,7 @@ static void do_new_object(BobCompiler *c,PVAL *pv)
 static void do_method_call(BobCompiler *c,PVAL *pv)
 {
     int tkn,n=2;
-    
+
     /* compile each argument expression */
     if ((tkn = BobToken(c)) != ')') {
         BobSaveToken(c,tkn);
@@ -1567,7 +1567,7 @@ static void do_method_call(BobCompiler *c,PVAL *pv)
         } while ((tkn = BobToken(c)) == ',');
     }
     require(c,tkn,')');
-    
+
     /* call the method */
     putcbyte(c,BobOpSEND);
     putcbyte(c,n);
@@ -1723,7 +1723,7 @@ static void variable_ref(BobCompiler *c,char *name)
 
 /* findvariable - find a variable */
 static void findvariable(BobCompiler *c,char *id,PVAL *pv)
-{    
+{
     int lev,off;
     if (strcmp(id,"true") == 0) {
         pv->fcn = code_constant;
@@ -1743,7 +1743,7 @@ static void findvariable(BobCompiler *c,char *id,PVAL *pv)
         pv->val = make_lit_symbol(c,id);
     }
 }
-                
+
 /* code_constant - compile a constant reference */
 static void code_constant(BobCompiler *c,int fcn,PVAL *pv)
 {
