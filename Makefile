@@ -133,7 +133,7 @@ clean:	$(DIRS)
 	rm -rf $(LIBDIR)
 	rm -rf $(OBJDIR)
 
-test: test.bob $(PROGS)
+test:	test.bob $(PROGS)
 	./bin/bob test.bob
 	./bin/bobc -o test.bbo test.bob
 	./bin/bobi test.bbo 
