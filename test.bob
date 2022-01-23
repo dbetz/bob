@@ -9,3 +9,5 @@ define foo(x)
       break;
   }
 }
+
+foo(10);

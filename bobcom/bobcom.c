@@ -571,7 +571,7 @@ static void do_for(BobCompiler *c)
     /* compile the loop body */
     fixup(c,body,codeaddr(c));
     addbreak(c,&bentry,end);
-    addcontinue(c,&centry,nxt);
+    addcontinue(c,&centry,update);
     do_statement(c);
     end = rembreak(c);
     remcontinue(c);

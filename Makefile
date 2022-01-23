@@ -7,7 +7,7 @@ HDRDIR=./include
 
 DIRS=$(BINDIR) $(LIBDIR) $(OBJDIR)
 
-PROGS=$(BINDIR)/bob # $(BINDIR)/bobc $(BINDIR)/bobi $(BINDIR)/bobmerge
+PROGS=$(BINDIR)/bob $(BINDIR)/bobc $(BINDIR)/bobi $(BINDIR)/bobmerge
 LIBS=$(LIBDIR)/libbobc.a $(LIBDIR)/libbobi.a
 HDRS=$(HDRDIR)/bob.h $(HDRDIR)/bobint.h $(HDRDIR)/bobcom.h
 
@@ -134,3 +134,8 @@ clean:	$(DIRS)
 	rm -rf $(BINDIR)
 	rm -rf $(LIBDIR)
 	rm -rf $(OBJDIR)
+
+test: test.bob $(PROGS)
+	./bin/bob test.bob
+	./bin/bobc -o test.bbo test.bob
+	./bin/bobi test.bbo 
