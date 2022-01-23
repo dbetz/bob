@@ -1,5 +1,3 @@
-XCFLAGS?=-m32
-
 BINDIR=./bin
 LIBDIR=./lib
 OBJDIR=./obj
@@ -11,7 +9,7 @@ PROGS=$(BINDIR)/bob $(BINDIR)/bobc $(BINDIR)/bobi $(BINDIR)/bobmerge
 LIBS=$(LIBDIR)/libbobc.a $(LIBDIR)/libbobi.a
 HDRS=$(HDRDIR)/bob.h $(HDRDIR)/bobint.h $(HDRDIR)/bobcom.h
 
-CFLAGS=$(XCFLAGS) -Wall -I$(HDRDIR) -I./bobcom -I./bobint -DBOB_INCLUDE_FLOAT_SUPPORT
+CFLAGS=-Wall -I$(HDRDIR) -I./bobcom -I./bobint -DBOB_INCLUDE_FLOAT_SUPPORT
 
 all:	$(DIRS) $(PROGS) $(LIBS)
 
