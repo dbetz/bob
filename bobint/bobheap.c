@@ -485,7 +485,7 @@ void *BobAlloc(BobInterpreter *c,unsigned long size)
         *p++ = totalSize;
         c->totalMemory += totalSize;
         ++c->allocCount;
-        printf("BobAlloc %lu %lu\n", size, totalAlloc);
+        //printf("BobAlloc %lu %lu\n", size, totalAlloc);
         totalAlloc += size;
     }
     return (void *)p;
