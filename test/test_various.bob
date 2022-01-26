@@ -1,0 +1,148 @@
+#! ../bin/bob
+
+// testing continue in a while block
+define while_continue() {
+    i = 0;
+
+    while(i < 10) {
+        stdout.Display(i, "\n");
+        i++;
+
+        continue;
+    }
+}
+
+// testing continue in a for block
+define for_continue() {
+    for(i = 0; i < 10; i++) {
+        stdout.Display(i, "\n");
+
+        continue;
+    }
+}
+
+// testing lambda: from original example by dbetz
+define fibo_generator()
+{
+    local fibo_nm1 = 0;
+    local fibo_nm2 = 1;
+
+    return function () {
+        local fibo = fibo_nm1 + fibo_nm2;
+
+        fibo_nm2 = fibo_nm1;
+        fibo_nm1 = fibo;
+
+        return fibo;
+    };
+}
+
+define test_fibo()
+{
+    stdout.Display("Make two fibo generators\n");
+
+    fibo1 = fibo_generator();
+    fibo2 = fibo_generator();
+
+    stdout.Display("First pump 10 values from the fibo1 generator\n");
+    for (i = 0; i < 10; ++i) {
+        stdout.Display("fibo1 ", fibo1(), "\n");
+    }
+
+    stdout.Display("Now pump 5 values from the fibo2 generator\n");
+    for (i = 0; i < 5; ++i) {
+        stdout.Display("fibo2 ", fibo2(), "\n");
+    }
+
+    stdout.Display("Finally, resume pumping values from the fibo1 generator\n");
+    for (i = 0; i < 10; ++i) {
+        stdout.Display("fibo1 ", fibo1(), "\n");
+    }
+}
+
+define testVector()
+{
+    // variables not declared local are global by default
+    // locals have to be at the beginning and cannot be declared later in the code
+
+    local x = 1, y = 2 , z = 3;
+    local b = "123";
+    local c = "123";
+
+    stdout.Display("\n test vector \n");
+
+    {
+        // you can start a new bloack anytime, locals also here before any statements
+        local pp = 6, x = 8;
+
+        stdout.Display(pp, " ", x, "\n");
+    }
+
+    // as you can see locals in a block hide locals in the outer block or globals
+    stdout.Display(pp, " ", x, "\n");
+
+
+    bb = new Object;
+    bb.x = 99;
+
+    // you can defined functions any tyme also inside functions
+    define aaa() { bb.x = 999; };
+
+    stdout.Display(bb, "\n");
+    stdout.Display(bb.x, "\n");
+    aaa();
+    stdout.Display(bb.x, "\n");
+
+    // play with array (vector)
+    b = "abcdefg";
+    a = b[ 4 ];
+    stdout.Display(b, " ", a, " ", b[5], "\n");
+
+    b[4] = 102;
+    a = b[ 4 ];
+    stdout.Display(b, " ", a, " ", b[5], "\n");
+
+    // it seems the value of a comma expression is its first value
+    nn = "a", 2, 4, "c";
+    stdout.Display(nn, "\n");
+    nn;
+}
+
+define funcReturningInt1() {
+    5;
+}
+
+define funcReturningInt2() {
+    local a = 5;
+    a;
+}
+
+
+// uses a main function as im used to that ;-)
+define main()
+{
+    while_continue();
+    for_continue();
+    test_fibo();
+
+    v = testVector();
+    b = "zyxwvu";
+    stdout.Display(b, " ", a, " ", b[5], " ", v, "\n");
+
+    stdout.Display(funcReturningInt1(), "\n");
+    stdout.Display(funcReturningInt2(), "\n");
+
+    obj1 = new Object();
+    define obj1.initialize() { this.a = 9; return this; }
+    stdout.Display("obj1", obj1,"\n");
+
+    obj2 = new Object;
+    stdout.Display("obj2", obj2, "\n");
+
+    obj3 = new obj1();
+    stdout.Display("obj3", obj3, "\n");
+
+    "end";
+}
+
+main();

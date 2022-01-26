@@ -1,0 +1,2 @@
+test_empty.bob
+Loading './test_empty.bob'

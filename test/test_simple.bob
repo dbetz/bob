@@ -1,0 +1,100 @@
+#! ./bin/bob
+
+define test1(what, name) {
+    local result = what();
+    stdout.Display(name, " ", result ,"\n");
+}
+
+// testing basic + - / *
+define t1() { 1 + 1 == 2; }
+define t2() { 2 - 1 == 1; }
+define t3() { 1 * 1 == 1; }
+define t4() { 2 / 2 == 1; }
+define t5a() { 3 % 2 == 1; }
+define t5b() { 6 % 4 == 2; }
+
+test1(t1, "t1");
+test1(t2, "t2");
+test1(t3, "t3");
+test1(t4, "t4");
+test1(t5a, "t5a");
+test1(t5b, "t5b");
+
+// simple increment and decrement
+define t6()  { local a = 1; a += 1; a == 2; }
+define t7()  { local a = 1; a -= 1; a == 0; }
+define t8()  { local a = 1; ++a == 2; }
+define t9()  { local a = 1; a++;    a == 2; }
+define t10() { local a = 1; a++ == 1; }
+
+test1(t6, "t6");
+test1(t7, "t7");
+test1(t8, "t8");
+test1(t9, "t9");
+test1(t10, "t10");
+
+// negative and float
+define t11() { local a = -1; a += 2; a == 1;}
+define t12() { local a = 0.4; a += 2; a > 2;}
+
+test1(t11, "t11");
+test1(t12, "t12");
+
+// shift right / left
+define t13() { local a = 2; a = a >> 1; stdout.Display(a, " "); a == 1;}
+define t14() { local a = 8; a = a << 2; stdout.Display(a, " "); a == 32;}
+
+test1(t13, "t13");
+test1(t14, "t14");
+
+// note: there is no scanner symbol for true,
+// but findvariable recognizes true, false and nil as special veriable names
+define t15() { local a = true; stdout.Display(a, " "); a;}
+define t16a() { local a; stdout.Display(a, " "); a == nil;}
+define t16b() { local a = nil; stdout.Display(a, " "); a == nil;}
+define t16b() { local a = nil; stdout.Display(!a, " "); !a == true;}
+
+test1(t15, "t15");
+test1(t16a, "t16a");
+test1(t16b, "t16b");
+
+zz = function () { local a = 'a'; local b = "a"; stdout.Display(a," ", b[0], " ", b[0] = ++a,  " ", b ,"\n"); };
+zz();
+
+// do_literal: Expecting a symbol (identifier) , vector or object literal
+jj = \[ 5,7,8,9 ];
+qq = \{ };
+nn = \jj;
+
+stdout.Display(zz, " ", jj, " ", qq, " ", nn, "\n");
+
+jj[1] = 9;
+stdout.Display(jj, " ", qq, " ", nn, "\n");
+
+qq.a = 8;
+stdout.Display(jj, " ", qq.a, " ", nn, "\n");
+
+jj = \[ 1,2];
+stdout.Display(jj, " ", qq.a, " ", nn, "\n");
+
+p = nn;
+stdout.Display(p, \p);
+
+p3 = \{ aaa: 5, bbb: "bbb", qq: nil };
+stdout.Display(p3, " ", p3.aaa, "\n");
+
+p4 = \{ p3 nn3: 0 };
+stdout.Display(p4, " ", p4.aaa, "\n");
+stdout.Display(p4, " ", p4.nn3, "\n");
+
+define dotdot(a..) {
+    stdout.Display(a, "\n");
+    stdout.Display(a[0], "\n");
+}
+
+dotdot("abc", "def");
+
+qq = \{ };
+nn = \[ 1,5,"9", nil, true ];;
+qq.Show();
+// nn.Show();  //Error: Object [1,5,"9",nil,true] has no method - Show

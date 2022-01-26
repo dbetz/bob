@@ -1,0 +1,33 @@
+test_obj.bob
+Loading './test_obj.bob'
+<Object-004e694c>
+<Method-initialize>
+<Method-printA>
+Class: <Object-004e4a2c>
+Properties:
+  printA: <Method-printA>
+  initialize: <Method-initialize>
+<Object-004e694c><Object-004e4a2c><Object-004e694c>
+true
+2
+Class: <Object-004e4a2c>
+Properties:
+  a: 2
+  printA: <Method-printA>
+  initialize: <Method-initialize>
+<Object-004e694c><Object-004e4a2c><Object-004e694c>
+true
+<Object-004e694c>
+true
+<Object-004e705c>
+<Method-aaa>
+<Object-004e705c> a 98
+true
+Class: <Object-004e694c>
+Properties:
+  aaa: <Method-aaa>
+  b: 98
+  a: "a"
+<Object-004e705c>
+a
+<Object-004e705c>

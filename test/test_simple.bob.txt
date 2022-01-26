@@ -1,0 +1,94 @@
+test_simple.bob
+Loading './test_simple.bob'
+<Method-test1>
+<Method-t1>
+<Method-t2>
+<Method-t3>
+<Method-t4>
+<Method-t5a>
+<Method-t5b>
+t1 true
+true
+t2 true
+true
+t3 true
+true
+t4 true
+true
+t5a true
+true
+t5b true
+true
+<Method-t6>
+<Method-t7>
+<Method-t8>
+<Method-t9>
+<Method-t10>
+t6 true
+true
+t7 true
+true
+t8 true
+true
+t9 true
+true
+t10 true
+true
+<Method-t11>
+<Method-t12>
+t11 true
+true
+t12 true
+true
+<Method-t13>
+<Method-t14>
+1 t13 true
+true
+32 t14 true
+true
+<Method-t15>
+<Method-t16a>
+<Method-t16b>
+<Method-t16b>
+true t15 true
+true
+nil t16a true
+true
+true t16b true
+true
+<Method-004e9124>
+97 97 98 b
+true
+[5,7,8,9]
+<Object-004e9334>
+jj
+<Method-004e9124> [5,7,8,9] <Object-004e9334> jj
+true
+9
+[5,9,8,9] <Object-004e9334> jj
+true
+8
+[5,9,8,9] 8 jj
+true
+[1,2]
+[1,2] 8 jj
+true
+jj
+jjptrue
+<Object-004e9c54>
+<Object-004e9c54> 5
+true
+<Object-004e9e84>
+<Object-004e9e84> 5
+true
+<Object-004e9e84> 0
+true
+<Method-dotdot>
+["abc","def"]
+abc
+true
+<Object-004ea34c>
+[1,5,"9",nil,true]
+[1,5,"9",nil,true]
+Class: <Object-004e4a2c>
+<Object-004ea34c>

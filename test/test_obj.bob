@@ -1,0 +1,32 @@
+#! ../bin/bob
+
+// create a new obj
+t = new Object();
+
+define t.initialize() {
+    this.a = "a";
+    this.b = 'b';
+
+    return this;
+}
+
+define t.printA() {
+    stdout.Display(this.a, "\n");
+    return this;
+}
+
+stdout.Display(t, t.Class() , t.Show(), "\n");
+t.a = 2;
+stdout.Display(t, t.Class() , t.Show(), "\n");
+stdout.Display(t, "\n");
+
+t2 = new t();
+
+define t2.aaa() {
+    super.printA();
+    return this;
+}
+
+stdout.Display(t2, " ", t2.a, " ", t2.b, "\n");
+t2.Show();
+t2.aaa();

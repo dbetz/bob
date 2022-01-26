@@ -1,0 +1,5 @@
+test_switch.bob
+Loading './test_switch.bob'
+2
+2 trueexpect true 
+true

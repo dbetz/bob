@@ -1,0 +1,116 @@
+#! ../bin/bob
+
+// define bb();
+// define must have a block, the block can be empty
+// parameters can be empty
+
+define ccc() {}
+define aaa() {}
+
+// a define does not have to be called, here we call it just to show its value
+aaa();
+
+// parameters can be initialized but dont have to be, they also dont need to be used
+
+define ddd(a = 0, b = 7)
+{
+    stdout.Display(a," ",b, "\n");
+    if(a == nil) {
+        b();
+    }
+    if(a == nil) {
+        b("hello there, i am the world you were looking for");
+    }
+}
+
+ddd();
+ddd(8, 9);
+// the type of the parameters will change if you pass parameters of a different type
+ddd(true, "abs");
+
+// functions can be passed as arguments
+define zzz(a="")
+{
+    stdout.Display(a, " in zzz\n");
+}
+
+// after passing the func we can call it inside the function by adding () and parameters if required/needed
+ddd(nil, zzz);
+
+define jjj() {
+    local p1 = 8;
+    local p4 = "jj";
+
+    a = p1;
+    // now locals are no longer allowed in this block, but in a sub block they are
+
+    // you can refer to variables you have never declared before
+    stdout.Display(p1, " ", p4, " ", p7, "\n");
+    {
+        local p1 = 7;
+        local p7 = true;
+
+        stdout.Display(p1, " ", p4, " ", p7, "\n");
+    }
+    // outside of the block where we declared p7 its value will be unknown so nil again
+    stdout.Display(p1, " ", p4, " ", p7, "\n");
+
+    p7 = 999;
+}
+
+jjj();
+
+// not that any variable not declared local is by definition global to this file, hence we now see the value of p7
+stdout.Display(p7, "\n");
+
+// each file is a implicit block
+// hence we can use return in a file wihout a encloding explicit block
+
+// and as each file acts as function it has a return value of the latest statement
+
+// parameters can be assigned to
+
+define z22(a = 9) {
+    a = 10;
+    // the return value of a func is the value of its last statement or the value of the return statment
+}
+
+define z33(a = 9) {
+    return;
+    a = 10;
+    // the return value of a func is the value of its last statement or the value of the return statment
+}
+
+z22();
+z22(667);
+
+z33(); // returns nil as we call return; with no value so nil is returned as it is the default value
+
+// this will break the program, DEFINE is seen as a variable and as there is no = we need a ; which is not there
+// DEFINE AAA() { RETURN TRUE; }
+
+// a undefined function cannot be called as AAA results in nil which cannot be called as function
+
+// AAA();
+
+// dotdot
+
+// define a func with a variable amount of arguments
+// .. must be the last parameter
+define func(a=9, b="gg", c..) {
+    stdout.Display(a," ", b, " ", c, "\n");
+}
+
+// use more arguments than we defined
+func(8,true,2,5,7);
+
+// funcioons can be redefined
+// define a func with a variable amount of arguments
+define func(p,q,r) {
+    stdout.Display(p," ", q, " ", r, "\n");
+}
+
+// use more arguments than we defined
+// but if we dont use .. we get to many argumante error during execution
+// func(8,true,2,5,7);
+func(8,true,2);
