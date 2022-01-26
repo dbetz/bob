@@ -1,0 +1,12 @@
+#! ../bin/bob
+
+v = 2;
+switch (v) {
+
+case 1:
+    break;
+
+default:
+    stdout.Display(v, " ", v != 1, "expect true \n");
+    break;
+}

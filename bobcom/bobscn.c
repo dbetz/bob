@@ -276,6 +276,11 @@ static int rtoken(BobCompiler *c)
                                 return getnumber(c,'0');
                         }
                         break;
+        case '#':       // add # as single line comment so we can do #! /usr/bin/env bob 
+                        while ((ch = getch(c)) != EOF)
+                            if (ch == '\n')
+                                break;
+                        break;
         default:        if (isdigit(ch))
                             return getnumber(c,ch);
                         else if (isidchar(ch))

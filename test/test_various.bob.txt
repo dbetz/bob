@@ -1,0 +1,76 @@
+test_various.bob
+Loading './test_various.bob'
+<Method-while_continue>
+<Method-for_continue>
+<Method-fibo_generator>
+<Method-test_fibo>
+<Method-testVector>
+<Method-funcReturningInt1>
+<Method-funcReturningInt2>
+<Method-main>
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+Make two fibo generators
+First pump 10 values from the fibo1 generator
+fibo1 1
+fibo1 1
+fibo1 2
+fibo1 3
+fibo1 5
+fibo1 8
+fibo1 13
+fibo1 21
+fibo1 34
+fibo1 55
+Now pump 5 values from the fibo2 generator
+fibo2 1
+fibo2 1
+fibo2 2
+fibo2 3
+fibo2 5
+Finally, resume pumping values from the fibo1 generator
+fibo1 89
+fibo1 144
+fibo1 233
+fibo1 377
+fibo1 610
+fibo1 987
+fibo1 1597
+fibo1 2584
+fibo1 4181
+fibo1 6765
+
+ test vector 
+6 8
+nil 1
+<Object-004e8424>
+99
+999
+abcdefg 101 102
+abcdffg 102 102
+a
+zyxwvu 102 117 a
+5
+5
+obj1<Object-004e84f4>
+obj2<Object-004e857c>
+obj3<Object-004e859c>
+"end"

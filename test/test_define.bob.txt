@@ -1,0 +1,35 @@
+test_define.bob
+Loading './test_define.bob'
+<Method-ccc>
+<Method-aaa>
+nil
+<Method-ddd>
+0 7
+nil
+8 9
+nil
+true abs
+nil
+<Method-zzz>
+nil <Method-zzz>
+ in zzz
+hello there, i am the world you were looking for in zzz
+true
+<Method-jjj>
+8 jj nil
+7 jj true
+8 jj nil
+999
+999
+true
+<Method-z22>
+<Method-z33>
+10
+10
+nil
+<Method-func>
+8 true [2,5,7]
+true
+<Method-func>
+8 true 2
+true

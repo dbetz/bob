@@ -654,6 +654,9 @@ static void addswitch(BobCompiler *c,SWENTRY *swentry)
     swentry->cases = NULL;
     swentry->defaultLabel = NIL;
     swentry->next = c->ssp;
+
+    // forgot to push this on the switch stack
+    c->ssp = swentry;
 }
 
 /* remswitch - remove a switch level from the stack */
@@ -685,7 +688,10 @@ static void do_switch(BobCompiler *c)
     /* compile the body of the switch statement */
     addswitch(c,&swentry);
     addbreak(c,&bentry,0);
-    do_statement(c);
+
+    // do_statement(c);
+    frequire(c, '{');
+    do_block(c);
     end = rembreak(c);
 
     /* branch to the end of the statement */
