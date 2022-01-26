@@ -654,8 +654,6 @@ static void addswitch(BobCompiler *c,SWENTRY *swentry)
     swentry->cases = NULL;
     swentry->defaultLabel = NIL;
     swentry->next = c->ssp;
-
-    // forgot to push this on the switch stack
     c->ssp = swentry;
 }
 
